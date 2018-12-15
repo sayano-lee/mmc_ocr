@@ -10,9 +10,26 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as Patches
 from shapely.geometry import Polygon
 
+from argparse import ArgumentParser
+
+parser = ArgumentParser(description="arguments for icdar dataset")
+
 import tensorflow as tf
 
 from data_util import GeneratorEnqueuer
+
+parser = ArgumentParser(description="arguments for icdar dataset")
+parser.add_argument("--training_data_path", type=str, default="./data/icdar2015", help="training dataset to use")
+parser.add_argument("--max_image_large_side", type=int, default=1280, help="max image size of training")
+parser.add_argument("--max_text_size", type=int, default=800, help="if the text in the input image is bigger than this,\
+                    then we resize the image according to this")
+parser.add_argument("--min_text_size",type=int, default=10, help="if the text size is smaller than this,\
+                    we ignore it during training")
+parser.add_argument("--min_crop_side_ratio", type=float, default=0.1, help="when doing random crop from input image,\
+                    the min length of min(H, W)")
+parser.add_argument("--geometry", type=str, default="RBOX", help="which geometry to generate, RBOX or QUAD")
+
+args = parser.parse_a
 
 tf.app.flags.DEFINE_string('training_data_path', './data/icdar2015/',
                            'training dataset to use')
@@ -25,7 +42,7 @@ tf.app.flags.DEFINE_integer('min_text_size', 10,
                             'if the text size is smaller than this, we ignore it during training')
 tf.app.flags.DEFINE_float('min_crop_side_ratio', 0.1,
                           'when doing random crop from input image, the'
-                          'min length of min(H, W')
+                          'min length of min(H, W)')
 tf.app.flags.DEFINE_string('geometry', 'RBOX',
                            'which geometry to generate, RBOX or QUAD')
 

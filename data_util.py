@@ -37,7 +37,7 @@ class GeneratorEnqueuer():
         self.queue = None
         self.random_seed = random_seed
 
-    ## FIXME max_queue_size from 10 to 1. +slee
+    ## FIXME max_queue_size from 10 to 1. +by slee
     def start(self, workers=1, max_queue_size=1):
         """Kicks off threads which add data from the generator into the queue.
 

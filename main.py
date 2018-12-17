@@ -9,23 +9,34 @@ from model import Extractor
 from torch.autograd import Variable
 
 from tqdm import tqdm
+from argparse import ArgumentParser
 
+parser = ArgumentParser()
 
-tf.app.flags.DEFINE_integer("num_readers", 1, "")
-tf.app.flags.DEFINE_integer("input_size", 512, "")
-tf.app.flags.DEFINE_integer("batch_size_per_gpu", 16, "")
-tf.app.flags.DEFINE_string("gpu_list", "0", "")
+parser.add_argument("--num_readers", type=int, default=1, help="number of readers for dataloader")
+parser.add_argument("--input_size", type=int, default=512, help="image input size of model")
+parser.add_argument("--batch_size_per_gpu", type=int, default=16, help="")
+parser.add_argument("--gpu_list", type=str, default="0", help="which gpus used for training")
 
-FLAGS = tf.app.flags.FLAGS
+args = parser.parse_args()
 
-gpus = list(range(len(FLAGS.gpu_list.split(','))))
+"""
+tf.app.args.DEFINE_integer("num_readers", 1, "")
+tf.app.args.DEFINE_integer("input_size", 512, "")
+tf.app.args.DEFINE_integer("batch_size_per_gpu", 16, "")
+tf.app.args.DEFINE_string("gpu_list", "0", "")
+
+args = tf.app.args.args
+"""
+
+gpus = list(range(len(args.gpu_list.split(','))))
 
 def main():
 
-    batch_size = FLAGS.batch_size_per_gpu * len(gpus)
-    data_generator = icdar.get_batch(num_workers=FLAGS.num_readers,
-                                     input_size=FLAGS.input_size,
-                                     batch_size=FLAGS.batch_size_per_gpu * len(gpus))
+    batch_size = args.batch_size_per_gpu * len(gpus)
+    data_generator = icdar.get_batch(num_workers=args.num_readers,
+                                     input_size=args.input_size,
+                                     batch_size=args.batch_size_per_gpu * len(gpus))
 
     model = Extractor()
 
@@ -56,7 +67,7 @@ def main():
 
         feat_path  = os.path.join(feat_path, os.path.basename(data[1][0]).split('.')[0], '.npy')
         idx_path  = os.path.join(feat_path, os.path.basename(data[1][0]).split('.')[0], '.idx')
-        feat = model(im)
+        # feat = model(im)
 
         """
         for j in range(batch_size):

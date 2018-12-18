@@ -1,17 +1,15 @@
 import os
-import argparse
+# import argparse
 import numpy as np
 import csv
 from PIL import Image
 from os.path import join as opj
 
 
-parser = argparse.ArgumentParser()
+# parser = argparse.ArgumentParser()
+# parser.add_argument("--train_root", type=str, default="./data/icdar2015/train")
 
-parser.add_argument("--train_root", type=str, default="./data/icdar2015/train")
-
-
-args = parser.parse_args()
+# args = parser.parse_args()
 
 def load_annoataion(p):
     '''
@@ -148,64 +146,76 @@ def crop_area(im, polys, tags, crop_background=False, max_tries=50):
 
 def convert_array_to_tuple(arr):
     assert type(arr) is np.ndarray
-    return tuple(tuple(arr[i].astype("uint8")) for i in range(4))
+    tmp = tuple(tuple(arr[i].astype("uint64")) for i in range(4))
+    return tmp
 
 
 def generate_crop_boxes(im, bboxes):
-
     try:
         assert type(bboxes) is np.ndarray
         num_bboxes = bboxes.shape[0]
     except:
         print("Wrong type of bboxes")
 
-    text_areas = []
+    outer_poly = []
     for i in range(num_bboxes):
         crop_bboxes = tuple(convert_array_to_tuple(bboxes[i]) for i in range(num_bboxes))
-    for cnt, bbox in enumerate(crop_bboxes):
-        import ipdb
-        ipdb.set_trace()
-        text_areas.append(im.crop(bbox))
+        left  = min(p[0] for p in crop_bboxes[i])
+        upper = max(p[1] for p in crop_bboxes[i])
+        right = max(p[0] for p in crop_bboxes[i])
+        lower = min(p[1] for p in crop_bboxes[i])
+        outer_poly.append((left, lower, right, upper))
 
-    import ipdb
-    ipdb.set_trace()
+    return outer_poly
 
-    return text_areas
+def convert_bool_to_label(tags):
+    label = np.ones(len(tags), dtype="uint8")
+    for cnt, i in enumerate(tags):
+        if i: label[cnt] = 0
+    return label
 
 
-class icdar():
+class icdar(object):
 
     def __init__(self, root):
-        # self.im_fn = [opj(root, 'img', i) for i in os.listdir(opj(root, 'img'))]
-        # self.ann_fn = [opj(root, 'gt', i) for i in os.listdir(opj(root, 'gt'))]
+        super(icdar, self).__init__()
         self.root = root
         self.fns = [i.split('.')[0] for i in os.listdir(opj(root, 'img'))]
 
     def __call__(self, *args, **kwargs):
         raise NotImplementedError
 
-    def get_batch(self):
-        for cnt, fn in enumerate(self.fns):
-            ann_fn = opj(self.root, 'gt', fn + '.txt')
-            im_fn = opj(self.root, 'img', fn + '.jpg')
+    def __getitem__(self, index):
+        # for cnt, fn in enumerate(self.fns):
+        fn = self.fns[index]
 
-            im = Image.open(im_fn)
-            h = im.size[1]
-            w = im.size[0]
-            text_polys, text_tags = load_annoataion(ann_fn)
+        ann_fn = opj(self.root, 'gt', fn + '.txt')
+        im_fn = opj(self.root, 'img', fn + '.jpg')
 
-            text_polys, text_tags = check_and_validate_polys(text_polys, text_tags, (h, w))
-            # im, text_polys, text_tags = crop_area(im, text_polys, text_tags, crop_background=False)
-            bboxes = generate_crop_boxes(im, text_polys)
-            import ipdb
-            ipdb.set_trace()
+        im = Image.open(im_fn)
+        h = im.size[1]
+        w = im.size[0]
+        text_polys, text_tags = load_annoataion(ann_fn)
 
-        return self.im_path
+        text_polys, text_tags = check_and_validate_polys(text_polys, text_tags, (h, w))
+
+        crops = generate_crop_boxes(im, text_polys)
+        # labels = convert_bool_to_label(text_tags)
+
+        cropped_imgs = []
+        for crop in crops:
+            cropped_imgs.append(im.crop(crop))
+
+        return cropped_imgs, text_tags
 
     def __len__(self):
-        raise NotImplementedError
+        return len(self.fns)
+
 
 if __name__ == '__main__':
-    dataset = icdar(args.train_root)
+    # dataset = icdar(args.train_root)
 
-    dataset.get_batch()
+    # for cnt, data in enumerate(dataset):
+    #     import ipdb
+    #     ipdb.set_trace()
+    pass

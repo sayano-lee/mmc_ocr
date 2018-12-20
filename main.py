@@ -15,6 +15,8 @@ from argparse import ArgumentParser
 
 from icdar import icdar
 
+from MMC_EAST import CPMMC
+
 parser = ArgumentParser()
 
 parser.add_argument("--num_readers", type=int, default=1, help="number of readers for dataloader")
@@ -26,7 +28,7 @@ parser.add_argument("--test_path", type=str, default="./data/icdar2015/test")
 
 parser.add_argument("--icdar_patches", type=str, default="./data/icdar2015/patches")
 parser.add_argument("--icdar_true_path", type=str, default="./data/icdar2015/patches/1")
-parser.add_argument("--icdar_false_path", type=str, default="./data/icdar2015/patches/0")
+parser.add_argument("--icdar_false_path", type=str, default="./data/icdar2015/patches/-1")
 
 args = parser.parse_args()
 

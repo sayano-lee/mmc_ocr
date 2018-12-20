@@ -15,7 +15,7 @@ from argparse import ArgumentParser
 
 from icdar import icdar
 
-from MMC_EAST import CPMMC
+from CPMMC-python import CPMMC
 
 parser = ArgumentParser()
 

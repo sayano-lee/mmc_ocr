@@ -28,7 +28,7 @@ parser.add_argument("--test_path", type=str, default="./data/icdar2015/test")
 
 parser.add_argument("--icdar_patches", type=str, default="./data/icdar2015/patches")
 parser.add_argument("--icdar_true_path", type=str, default="./data/icdar2015/patches/1")
-parser.add_argument("--icdar_false_path", type=str, default="./data/icdar2015/patches/-1")
+parser.add_argument("--icdar_false_path", type=str, default="./data/icdar2015/patches/0")
 
 args = parser.parse_args()
 
@@ -68,7 +68,7 @@ def extract(loader, model):
 
 if __name__ == '__main__':
     # Step 1 : extract bboxes
-    # make_dataset()
+    make_dataset()
 
     # Step 2 : extract features
     transforms = transforms.Compose([transforms.Resize((224,224)),

@@ -1,0 +1,3 @@
+[submodule "CPMMC_python"]
+	path = CPMMC_python
+	url = https://github.com/sayano-lee/CPMMC_python

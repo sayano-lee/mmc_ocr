@@ -11,7 +11,7 @@ from os.path import join as opj
 
 # args = parser.parse_args()
 
-def load_annoataion(p):
+def load_annotation(p):
     '''
     load annotation from the text file
     :param p:
@@ -195,7 +195,7 @@ class icdar(object):
         im = Image.open(im_fn)
         h = im.size[1]
         w = im.size[0]
-        text_polys, text_tags = load_annoataion(ann_fn)
+        text_polys, text_tags = load_annotation(ann_fn)
 
         text_polys, text_tags = check_and_validate_polys(text_polys, text_tags, (h, w))
 

@@ -26,9 +26,15 @@ parser.add_argument("--gpu_list", type=str, default="0", help="which gpus used f
 parser.add_argument("--train_path", type=str, default="./data/icdar2015/train")
 parser.add_argument("--test_path", type=str, default="./data/icdar2015/test")
 
+# default training path
 parser.add_argument("--icdar_patches", type=str, default="./data/icdar2015/patches")
 parser.add_argument("--icdar_true_path", type=str, default="./data/icdar2015/patches/1")
 parser.add_argument("--icdar_false_path", type=str, default="./data/icdar2015/patches/0")
+# testing path
+parser.add_argument("--icdar_patches_test", type=str, default="./data/icdar2015/test_patches")
+parser.add_argument("--icdar_true_path_test", type=str, default="./data/icdar2015/test_patches/1")
+parser.add_argument("--icdar_false_path_test", type=str, default="./data/icdar2015/test_patches/0")
+
 
 parser.add_argument("--split_path_0", type=str, default="./tmp/result/0")
 parser.add_argument("--split_path_1", type=str, default="./tmp/result/1")
@@ -38,9 +44,18 @@ args = parser.parse_args()
 gpus = list(range(len(args.gpu_list.split(','))))
 
 
-def make_dataset():
+def make_dataset(dataset):
 
-    icdar_loader = icdar(args.train_path)
+    if dataset == 'train':
+        root = args.train_path
+        split_true_path = args.icdar_true_path
+        split_false_path = args.icdar_false_path
+    else:
+        root = args.test_path
+        split_true_path = args.icdar_true_path_test
+        split_false_path = args.icdar_false_path_test
+
+    icdar_loader = icdar(root)
 
     pbar = tqdm(total=len(icdar_loader))
     true_count = 0
@@ -51,11 +66,11 @@ def make_dataset():
         for count, flag in enumerate(tag):
             if flag:
                 true_count += 1
-                path = opj(args.icdar_true_path, 'IMG_'+str(true_count)+'.jpg')
+                path = opj(split_true_path, 'IMG_'+str(true_count)+'.jpg')
                 im[count].save(path)
             else:
                 false_count += 1
-                path = opj(args.icdar_false_path, 'IMG_'+str(false_count)+'.jpg')
+                path = opj(split_false_path, 'IMG_'+str(false_count)+'.jpg')
                 im[count].save(path)
 
     pbar.close()
@@ -99,21 +114,38 @@ def clustering(loader, model):
 
         acc, pred = MMC(data=data, label=new_label)
 
+        import ipdb
+        ipdb.set_trace()
         for cnt, flag in enumerate(pred):
             if flag.item() == 1:
                 shutil.copy(path[cnt], cls0_path)
-            if flag.item() == -1:
+            elif flag.item() == -1:
                 shutil.copy(path[cnt], cls1_path)
 
     pbar.close()
     return acc
 
 
+def filter():
+    transform = transforms.Compose([transforms.Resize((224,224)),
+                                    transforms.ToTensor(),
+                                    transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                                         std=[0.229,0.224,0.225])])
+    dataset = ImageFolder(root=args.icdar_patches, transform=transform)
+    loader = torch.utils.data.DataLoader(dataset, batch_size=10, shuffle=True)
+
+    model = Extractor()
+    for params in model.parameters():
+        params.requires_grad = False
+    acc = clustering(loader=loader, model=model)
+
 if __name__ == '__main__':
     # Step 1 : extract bboxes
-    #make_dataset()
+    dataset = ['train', 'test']
+    make_dataset(dataset=dataset[1])
 
     # Step 2 : extract features and clustering
+    """
     transforms = transforms.Compose([transforms.Resize((224,224)),
                                      transforms.ToTensor(),
                                      transforms.Normalize(mean=[0.485, 0.456, 0.406],
@@ -125,3 +157,5 @@ if __name__ == '__main__':
     for params in model.parameters():
         params.requires_grad = False
     acc = clustering(loader=loader, model=model)
+    """
+    #filter()

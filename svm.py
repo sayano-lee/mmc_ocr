@@ -10,9 +10,10 @@ transforms = transforms.Compose([transforms.Resize((224,224)),
                                  transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                                       std=[0.229,0.224,0.225])])
 def train(loader, model, clf):
+    print("============>training<============")
     test_dataset = ImageFolder(root="./data/icdar2015/test_patches",
                                transform=transforms)
-    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=10, shuffle=True)
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=20, shuffle=True)
     pbar = tqdm(total=len(loader))
     for cnt, data in enumerate(loader):
         pbar.update(1)
@@ -27,12 +28,15 @@ def train(loader, model, clf):
             continue
 
     pbar.close()
+    print("\n")
+    print("============>testing<============")
     test(test_loader, clf)
 
 def test(loader, clf):
 
     pbar = tqdm(total=len(loader))
 
+    precision = 0.0
     for cnt, data in enumerate(loader):
         pbar.update(1)
         im, ann, im_fns = data[0], data[1], data[2]
@@ -40,30 +44,19 @@ def test(loader, clf):
         feat = model(im)
         x = feat.cpu().numpy()
         y = ann.numpy()
-        try:
-            clf.fit(x, y)
-        except ValueError:
-            continue
-        pass
 
-        clf.score(x, y)
-        import ipdb
-        ipdb.set_trace()
+        precision = precision + clf.score(x, y)
     pbar.close()
+
+
+    print("\nAverage Precision is {}".format(precision/len(loader)))
 
 if __name__ == '__main__':
 
     icdar_patches = "./data/icdar2015/patches"
 
-    """
-    transforms = transforms.Compose([transforms.Resize((224,224)),
-                                     transforms.ToTensor(),
-                                     transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                                          std=[0.229,0.224,0.225])])
-    """
-
     dataset = ImageFolder(root=icdar_patches, transform=transforms)
-    loader = torch.utils.data.DataLoader(dataset, batch_size=10, shuffle=True)
+    loader = torch.utils.data.DataLoader(dataset, batch_size=20, shuffle=True)
 
     # extractor for deep features
     model = Extractor()
